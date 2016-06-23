@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="UTF-8">
+    <title>node-apn by node-apn</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" type="text/css" href="stylesheets/normalize.css" media="screen">
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/github-light.css" media="screen">
+  </head>
+  <body>
+    <section class="page-header">
+      <h1 class="project-name">node-apn</h1>
+      <h2 class="project-tagline">A Node.js module for interfacing with the Apple Push Notification service</h2>
+    </section>
+
+    <section class="main-content">
+      <p><a href="https://npmjs.com/package/apn"><img src="https://nodei.co/npm/apn.png?downloads=true" alt="NPM"> </a></p>
+
+<p><a href="https://travis-ci.org/argon/node-apn"><img src="https://travis-ci.org/argon/node-apn.png?branch=master" alt="Build status"> </a>
+<a href="https://coveralls.io/r/argon/node-apn"><img src="https://coveralls.io/repos/argon/node-apn/badge.svg?branch=master" alt="Code coverage"></a>
+<a href="https://www.codacy.com/public/argon/node-apn"><img src="https://www.codacy.com/project/badge/e7735fbe0db244f3b310657d0dabaa11" alt="Codacy"></a></p>
+
+<p><a href="https://david-dm.org/argon/node-apn"><img src="https://david-dm.org/argon/node-apn.png" alt="dependencies"></a>
+<a href="https://david-dm.org/argon/node-apn#info=devDependencies"><img src="https://david-dm.org/argon/node-apn/dev-status.png" alt="devdependencies"></a></p>
+
+<p><a href="http://issuestats.com/github/argon/node-apn"><img src="http://issuestats.com/github/argon/node-apn/badge/pr" alt="Issue Stats"></a>
+<a href="http://issuestats.com/github/argon/node-apn"><img src="http://issuestats.com/github/argon/node-apn/badge/issue" alt="Issue Stats"></a></p>
+
+<h2>
+<a id="features" class="anchor" href="#features" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Features</h2>
+
+<ul>
+<li>Fast</li>
+<li>Maintains a connection to the server to maximise notification batching and throughput.</li>
+<li>Enhanced binary interface support, with error handling</li>
+<li>Automatically sends unsent notifications if an error occurs</li>
+<li>Feedback service support</li>
+<li>Complies with all best practises laid out by Apple</li>
+</ul>
+
+<h2>
+<a id="installation" class="anchor" href="#installation" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Installation</h2>
+
+<p>Via <a href="https://npmjs.org">npm</a>:</p>
+
+<pre><code>$ npm install apn
+</code></pre>
+
+<p>As a submodule of your project (you will also need to install [q][q])</p>
+
+<pre><code>$ git submodule add http://github.com/argon/node-apn.git apn
+$ git submodule update --init
+</code></pre>
+
+<h2>
+<a id="quick-start" class="anchor" href="#quick-start" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Quick Start</h2>
+
+<p>This is intended as a brief introduction, please refer to the documentation in <code>doc/</code> for more details.</p>
+
+<h3>
+<a id="load-in-the-module" class="anchor" href="#load-in-the-module" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Load in the module</h3>
+
+<pre><code>var apn = require('apn');
+</code></pre>
+
+<h3>
+<a id="connecting" class="anchor" href="#connecting" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Connecting</h3>
+
+<p>Create a new connection to the APN gateway server, passing a dictionary of options to the constructor. If you name your certificate and key files appropriately (<code>cert.pem</code> and <code>key.pem</code>) then the defaults should be suitable to get you up and running.</p>
+
+<div class="highlight highlight-source-js"><pre>    <span class="pl-k">var</span> options <span class="pl-k">=</span> { };
+
+    <span class="pl-k">var</span> apnConnection <span class="pl-k">=</span> <span class="pl-k">new</span> <span class="pl-en">apn.Connection</span>(options);</pre></div>
+
+<p>By default, if the environment variable <code>NODE_ENV=production</code> is set, the module will connect to the production gateway. Otherwise it will connect to the sandbox. This along with many other settings can be overriden with the options object.</p>
+
+<p>For more information about configuration options consult the <a href="doc/connection.markdown">documentation</a>.</p>
+
+<p>Help with preparing the key and certificate files for connection can be found in the <a href="https://github.com/argon/node-apn/wiki/Preparing-Certificates" title="Preparing Certificates">wiki</a></p>
+
+<h3>
+<a id="sending-a-notification" class="anchor" href="#sending-a-notification" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Sending a notification</h3>
+
+<p>To send a notification first create a <code>Device</code> object. Pass it the device token as either a hexadecimal string, or alternatively as a <code>Buffer</code> object containing the token in binary form.</p>
+
+<pre><code>var myDevice = new apn.Device(token);
+</code></pre>
+
+<p>Next, create a notification object, set the relevant parameters (See the <a href="https://developer.apple.com/library/ios/documentation/NetworkingInternet/Conceptual/RemoteNotificationsPG/Chapters/ApplePushService.html#//apple_ref/doc/uid/TP40008194-CH100-SW1" title="Local and Push Notification Programming Guide: Apple Push Notification Service">payload documentation</a> for more details.) and use the <code>pushNotification</code> method on the connection to send it.</p>
+
+<pre><code>var note = new apn.Notification();
+
+note.expiry = Math.floor(Date.now() / 1000) + 3600; // Expires 1 hour from now.
+note.badge = 3;
+note.sound = "ping.aiff";
+note.alert = "\uD83D\uDCE7 \u2709 You have a new message";
+note.payload = {'messageFrom': 'Caroline'};
+
+apnConnection.pushNotification(note, myDevice);
+</code></pre>
+
+<p>The above options will compile the following dictionary to send to the device:</p>
+
+<pre><code>{"messageFrom":"Caroline","aps":{"badge":3,"sound":"ping.aiff","alert":"\uD83D\uDCE7 \u2709 You have a new message"}}
+</code></pre>
+
+<h3>
+<a id="setting-up-the-feedback-service" class="anchor" href="#setting-up-the-feedback-service" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Setting up the feedback service</h3>
+
+<p>Apple recommends checking the feedback service periodically for a list of devices for which there were failed delivery attempts.</p>
+
+<p>Using the <code>Feedback</code> object it is possible to periodically query the server for the list. Many of the options are similar to that of <code>Connection</code>, including the authentication configuration. It is recomended that you share the same configuration object between Connection and Feedback instances to ensure they stay in sync.</p>
+
+<p>Attach a listener to the <code>feedback</code> event to receive the output as two arguments, the <code>time</code> returned by the server (epoch time) and a <code>Buffer</code> object containing the device token - this event will be emitted for each device separately. Alternatively you can enable the <code>batchFeedback</code> option and the <code>feedback</code> event will provide an array of objects containing <code>time</code> and <code>device</code> properties.</p>
+
+<pre><code>var options = {
+    "batchFeedback": true,
+    "interval": 300
+};
+
+var feedback = new apn.Feedback(options);
+feedback.on("feedback", function(devices) {
+    devices.forEach(function(item) {
+        // Do something with item.device and item.time;
+    });
+});
+</code></pre>
+
+<p>By specifying a time interval (in seconds) <code>Feedback</code> will periodically query the service without further intervention.</p>
+
+<p>More information about the feedback service can be found in the <a href="https://developer.apple.com/library/ios/documentation/NetworkingInternet/Conceptual/RemoteNotificationsPG/Chapters/CommunicatingWIthAPS.html#//apple_ref/doc/uid/TP40008194-CH101-SW3" title="The Feedback Service">feedback service documentation</a>.</p>
+
+<h2>
+<a id="debugging" class="anchor" href="#debugging" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Debugging</h2>
+
+<p>If you experience difficulties sending notifications or using the feedback service you can enable debug messages within the library by running your application with <code>DEBUG=apn</code> or <code>DEBUG=apnfb</code> set as an environment variable.</p>
+
+<p>You are encouraged to read the extremely informative <a href="http://developer.apple.com/library/ios/#technotes/tn2265/_index.html" title="Troubleshooting Push Notifications">Troubleshooting Push Notifications</a> Tech Note in the first instance, in case your query is answered there.</p>
+
+<h2>
+<a id="support" class="anchor" href="#support" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Support</h2>
+
+<p>If you have any questions or difficulties working with the module, the <a href="https://groups.google.com/group/node-apn" title="node-apn Google Group">node-apn Google group</a> should be your first port of call. </p>
+
+<p>Please include as much detail as possible - especially debug logs, if the problem is reproducible sample code is also extremely helpful. GitHub Issues should only be created for verified problems and enhancements, this will allow them to be tracked more easily.</p>
+
+<h2>
+<a id="resources" class="anchor" href="#resources" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Resources</h2>
+
+<ul>
+<li><a href="https://developer.apple.com/library/ios/documentation/NetworkingInternet/Conceptual/RemoteNotificationsPG/Chapters/ApplePushService.html#//apple_ref/doc/uid/TP40008194-CH100-SW1" title="Local and Push Notification Programming Guide: Apple Push Notification Service">Local and Push Notification Programming Guide: Apple Push Notification Service</a></li>
+<li><a href="http://developer.apple.com/library/ios/#technotes/tn2265/_index.html" title="Troubleshooting Push Notifications">Apple Technical Note: Troubleshooting Push Notifications</a></li>
+<li><a href="https://github.com/argon/node-apn/wiki/Projects,-Applications,-and-Companies-Using-Node-apn" title="List of Projects, Applications and Companies Using Node-apn">List of Projects, Applications and Companies Using Node-apn</a></li>
+</ul>
+
+<h2>
+<a id="credits" class="anchor" href="#credits" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Credits</h2>
+
+<p>Created by <a href="http://andrewnaylor.co.uk">Andrew Naylor</a>.</p>
+
+<h2>
+<a id="license" class="anchor" href="#license" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>License</h2>
+
+<p>Released under the MIT License</p>
+
+<blockquote>
+<p>Copyright (c) 2016 Andrew Naylor</p>
+
+<p>Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:</p>
+
+<p>The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.</p>
+
+<p>THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</p>
+</blockquote>
+
+      <footer class="site-footer">
+
+        <span class="site-footer-credits">This page was generated by <a href="https://pages.github.com">GitHub Pages</a> using the <a href="https://github.com/jasonlong/cayman-theme">Cayman theme</a> by <a href="https://twitter.com/jasonlong">Jason Long</a>.</span>
+      </footer>
+
+    </section>
+
+  
+  </body>
+</html>
